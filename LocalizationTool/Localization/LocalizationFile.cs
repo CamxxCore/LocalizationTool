@@ -56,11 +56,13 @@ namespace LocalizationTool.Localization
 
         public LocalizationFile(int version, int languageId, Dictionary<int, string> items)
         {
-            Header.Version = version;
+            Items = items ?? throw new ArgumentNullException("items");
+
+            Header.Count = items.Count;
 
             Header.LanguageID = languageId;
 
-            Items = items ?? throw new ArgumentNullException("items");
+            Header.Version = version;
         }
 
         public LocalizationFile(int version, int languageId)

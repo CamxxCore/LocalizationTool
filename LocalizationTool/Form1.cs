@@ -45,7 +45,7 @@ namespace LocalizationTool
             _file = new Localization.LocalizationFile(2, _currentLanguageId, items);
         }
 
-        private void InitializeTemplate()
+        private void LoadTemplateToDataTable()
         {
             if (File.Exists("eng.template"))
             {
@@ -65,48 +65,26 @@ namespace LocalizationTool
             }
         }
 
-        private void GenerateHeader()
-        {
-            if (_template == null)
-                return;
-
-            using (var file = new StreamWriter(Path.Combine(Environment.CurrentDirectory, "LocalizationTypes.h")))
-            {
-                file.WriteLine("#pragma once\n\n");
-
-                file.WriteLine("enum StringID {\n");
-
-                for (int i = 0; i < _template.Length; i++)
-                {
-                    var LocCodeName = "SID_" + _template[i].Replace(' ', '_').ToUpper();
-
-                    file.WriteLine(LocCodeName + (i == _template.Length - 1 ? "\n" : ","));
-                }
-
-                file.WriteLine("};\n");
-            }
-        }
-
         private void Form1_Load(object sender, EventArgs e)
         {
-            CultureInfo[] cultures = CultureInfo.GetCultures(CultureTypes.AllCultures);
-
-            comboBox1.Items.AddRange(cultures.OrderBy(c => c.LCID).Select(x => { return x.EnglishName + "(" + x.LCID + ")"; }).ToArray());
-
-            comboBox1.SelectedIndex = _currentLanguageId;
-
             var column = dataTable.Columns.Add("ID");
             dataTable.PrimaryKey = new DataColumn[] { column };
             dataTable.Columns.Add("English Name");
             dataTable.Columns.Add("Localized Name");
 
-            dataGridView1.DataSource = dataTable;
-
-            InitializeTemplate();
+            LoadTemplateToDataTable();
 
             InitializeNewFile();
 
+            dataGridView1.DataSource = dataTable;
+
             dataGridView1.CellValidated += DataGridView1_CellValidated;
+
+            CultureInfo[] cultures = CultureInfo.GetCultures(CultureTypes.AllCultures);
+
+            comboBox1.Items.AddRange(cultures.OrderBy(c => c.LCID).Select(x => { return x.EnglishName + " (" + x.LCID + ")"; }).ToArray());
+
+            comboBox1.SelectedIndex = _currentLanguageId;
 
             checkBox1.Checked = _generateHeader;
         }
@@ -150,8 +128,6 @@ namespace LocalizationTool
 
             dataTable.Rows.Clear();
 
-            InitializeTemplate();
-
             foreach (var item in _file.Items)
             {
                 DataRow row = dataTable.Rows.Find(item.Key);
@@ -181,9 +157,9 @@ namespace LocalizationTool
         {
             dataTable.Rows.Clear();
 
-            InitializeTemplate();
+            LoadTemplateToDataTable();
 
-            InitializeNewFile(); 
+            InitializeNewFile();
         }
 
         private void DataGridView1_CellValidated(object sender, DataGridViewCellEventArgs e)
@@ -251,5 +227,28 @@ namespace LocalizationTool
         {
             _generateHeader = checkBox1.Checked;
         }
+
+        private void GenerateHeader()
+        {
+            if (_template == null)
+                return;
+
+            using (var file = new StreamWriter(Path.Combine(Environment.CurrentDirectory, "LocalizationTypes.h")))
+            {
+                file.WriteLine("#pragma once\n\n");
+
+                file.WriteLine("enum StringID {\n");
+
+                for (int i = 0; i < _template.Length; i++)
+                {
+                    var LocCodeName = "SID_" + _template[i].Replace(' ', '_').ToUpper();
+
+                    file.WriteLine(LocCodeName + (i == _template.Length - 1 ? "\n" : ","));
+                }
+
+                file.WriteLine("};\n");
+            }
+        }
+
     }
 }
