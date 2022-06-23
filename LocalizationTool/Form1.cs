@@ -1,23 +1,20 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Data;
-using System.Drawing;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
+using LocalizationTool.Localization;
 
 namespace LocalizationTool
 {
     public partial class Form1 : Form
     {
-        Localization.LocalizationFile _file = null;
+        LocalizationFile _file = null;
 
-        DataTable dataTable = new DataTable();
+        private readonly DataTable dataTable = new DataTable();
 
         int _currentLanguageId = 9;
 
@@ -42,28 +39,35 @@ namespace LocalizationTool
                 return new KeyValuePair<int, string>(key, "");
             }, _template.Length)); // Fill the dictionary with empty values so when we serialize the file, they are in the correct order.
 
-            _file = new Localization.LocalizationFile(2, _currentLanguageId, items);
+            _file = new LocalizationFile(2, _currentLanguageId, items);
+
+            label4.Text = _file.Items.Count.ToString();
         }
 
         private void LoadTemplateToDataTable()
         {
-            if (File.Exists("eng.template"))
+            dataTable.Clear();
+
+            if (_template == null)
             {
+                if (!File.Exists("eng.template"))
+                    throw new FileNotFoundException("Cannot continue without template file!");
+
                 _template = File.ReadAllLines("eng.template");
-
-                for (int i = 0; i < _template.Length; i++)
-                {
-                    var row = dataTable.NewRow();
-                    row[0] = (i + 1).ToString();
-                    row[1] = _template[i];
-                    row[2] = "";
-                    dataTable.Rows.Add(row);
-
-                }
-
-                dataTable.AcceptChanges();
             }
+          
+            for (int i = 0; i < _template.Length; i++)
+            {
+                var row = dataTable.NewRow();
+                row[0] = (i + 1).ToString();
+                row[1] = _template[i];
+                row[2] = "";
+                dataTable.Rows.Add(row);
+            }
+
+            dataTable.AcceptChanges();
         }
+    
 
         private void Form1_Load(object sender, EventArgs e)
         {
@@ -103,7 +107,7 @@ namespace LocalizationTool
 
             dataTable.Rows.Clear();
 
-            _file = new Localization.LocalizationFile();
+            _file = new LocalizationFile();
 
             var bytes = File.ReadAllBytes(svd.FileName);
 
@@ -153,40 +157,6 @@ namespace LocalizationTool
             dataGridView1.Refresh();   
         }
 
-        private void button2_Click(object sender, EventArgs e)
-        {
-            dataTable.Rows.Clear();
-
-            LoadTemplateToDataTable();
-
-            InitializeNewFile();
-        }
-
-        private void DataGridView1_CellValidated(object sender, DataGridViewCellEventArgs e)
-        {
-            if (dataGridView1.RowCount <= 0 || dataGridView1.Rows[e.RowIndex].Cells[2].Value == null)
-                return;
-
-            if (_currentLanguageId == 9 && e.ColumnIndex == 1) // english, just copy the same value over.
-                dataGridView1.Rows[e.RowIndex].Cells[2].Value = dataGridView1.Rows[e.RowIndex].Cells[1].Value;
-
-            //var rowKey = e.RowIndex.ToString();// Convert.ToInt32(dataGridView1.Rows[e.RowIndex].Cells[0].Value);
-
-            _file.Items[e.RowIndex + 1] = dataGridView1.Rows[e.RowIndex].Cells[2].Value.ToString();
-        }
-
-        private void ComboBox1_SelectedIndexChanged(object sender, EventArgs e)
-        {
-            _currentLanguageId = comboBox1.SelectedIndex;
-
-            if (_file != null)
-            {
-                _file.Header.LanguageID = _currentLanguageId;
-            }
-
-            label5.Text = new CultureInfo(_currentLanguageId).EnglishName;
-        }
-
         private void button3_Click(object sender, EventArgs e)
         {
             if (_file == null)
@@ -221,6 +191,39 @@ namespace LocalizationTool
 
             if (_generateHeader)
                 GenerateHeader();
+        }
+
+
+        private void button2_Click(object sender, EventArgs e)
+        {
+            LoadTemplateToDataTable();
+
+            InitializeNewFile();
+        }
+
+        private void DataGridView1_CellValidated(object sender, DataGridViewCellEventArgs e)
+        {
+            if (dataGridView1.RowCount <= 0 || dataGridView1.Rows[e.RowIndex].Cells[2].Value == null)
+                return;
+
+            if (_currentLanguageId == 9 && e.ColumnIndex == 1) // english, just copy the same value over.
+                dataGridView1.Rows[e.RowIndex].Cells[2].Value = dataGridView1.Rows[e.RowIndex].Cells[1].Value;
+
+            //var rowKey = e.RowIndex.ToString();// Convert.ToInt32(dataGridView1.Rows[e.RowIndex].Cells[0].Value);
+
+            _file.Items[e.RowIndex + 1] = dataGridView1.Rows[e.RowIndex].Cells[2].Value.ToString();
+        }
+
+        private void ComboBox1_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            _currentLanguageId = comboBox1.SelectedIndex;
+
+            if (_file != null)
+            {
+                _file.Header.LanguageID = _currentLanguageId;
+            }
+
+            label5.Text = new CultureInfo(_currentLanguageId).EnglishName;
         }
 
         private void checkBox1_CheckedChanged(object sender, EventArgs e)
