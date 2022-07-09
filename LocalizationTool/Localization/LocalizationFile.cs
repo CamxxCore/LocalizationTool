@@ -95,7 +95,7 @@ namespace LocalizationTool.Localization
                     writer.Write(Header.Version);
                     writer.Write(Header.LanguageID);
                     writer.Write(Items.Count);
-                    System.Windows.Forms.MessageBox.Show(Items.Count.ToString());
+
                     foreach (var item in Items)
                     {
                         writer.Write(item.Value);

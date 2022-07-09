@@ -44,7 +44,7 @@ namespace LocalizationTool
             label4.Text = _file.Items.Count.ToString();
         }
 
-        private void LoadTemplateToDataTable()
+        private void LoadTemplateToDataTable(bool isLocalizedEnglish = false)
         {
             dataTable.Clear();
 
@@ -61,7 +61,7 @@ namespace LocalizationTool
                 var row = dataTable.NewRow();
                 row[0] = (i + 1).ToString();
                 row[1] = _template[i];
-                row[2] = "";
+                row[2] = isLocalizedEnglish ? _template[i] : "";
                 dataTable.Rows.Add(row);
             }
 
@@ -224,6 +224,8 @@ namespace LocalizationTool
             }
 
             label5.Text = new CultureInfo(_currentLanguageId).EnglishName;
+
+            LoadTemplateToDataTable(_currentLanguageId == 9);
         }
 
         private void checkBox1_CheckedChanged(object sender, EventArgs e)
